@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard - Food Ordering System</title>
+    <link rel="stylesheet" href="/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body class="admin-page">
+    <nav class="navbar">
+        <div class="logo"><i class="fas fa-utensils"></i> FoodHub Admin</div>
+        <div class="nav-links">
+            <a href="admin.html" class="active">Dashboard</a>
+            <a href="menu.html">View Site</a>
+            <a href="#" onclick="logout()">Logout</a>
+        </div>
+    </nav>
+
+    <div class="admin-container">
+        <h1 class="page-title">Admin Dashboard</h1>
+        
+        <div class="admin-tabs">
+            <button class="admin-tab active" onclick="showTab('menu')">Menu Management</button>
+            <button class="admin-tab" onclick="showTab('orders')">All Orders</button>
+        </div>
+        
+        <!-- Menu Management Section -->
+        <div id="menuSection" class="admin-section">
+            <div class="section-header">
+                <h2>Menu Items</h2>
+                <button class="add-btn" onclick="showAddMenuModal()">
+                    <i class="fas fa-plus"></i> Add New Item
+                </button>
+            </div>
+            
+            <table class="admin-table">
+                <thead>
+                    <tr>
+                        <th>Image</th>
+                        <th>Name</th>
+                        <th>Category</th>
+                        <th>Price</th>
+                        <th>Status</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="menuTableBody">
+                    <!-- Menu items will be loaded dynamically -->
+                </tbody>
+            </table>
+        </div>
+        
+        <!-- Orders Section -->
+        <div id="ordersSection" class="admin-section" style="display: none;">
+            <div class="section-header">
+                <h2>All Orders</h2>
+            </div>
+            
+            <table class="admin-table">
+                <thead>
+                    <tr>
+                        <th>Order ID</th>
+                        <th>Customer</th>
+                        <th>Date</th>
+                        <th>Total</th>
+                        <th>Status</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="ordersTableBody">
+                    <!-- Orders will be loaded dynamically -->
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Add/Edit Menu Item Modal -->
+    <div id="menuModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="modalTitle">Add Menu Item</h3>
+                <span class="close-btn" onclick="closeMenuModal()">&times;</span>
+            </div>
+            <div id="menuMessage" class="message"></div>
+            <form id="menuForm">
+                <input type="hidden" id="menuItemId">
+                <div class="form-group">
+                    <label for="itemName">Item Name</label>
+                    <input type="text" id="itemName" required>
+                </div>
+                <div class="form-group">
+                    <label for="itemDescription">Description</label>
+                    <textarea id="itemDescription" rows="3" required></textarea>
+                </div>
+                <div class="form-group">
+                    <label for="itemPrice">Price ($)</label>
+                    <input type="number" id="itemPrice" step="0.01" min="0" required>
+                </div>
+                <div class="form-group">
+                    <label for="itemCategory">Category</label>
+                    <select id="itemCategory" required>
+                        <option value="appetizers">Appetizers</option>
+                        <option value="main-course">Main Course</option>
+                        <option value="desserts">Desserts</option>
+                        <option value="beverages">Beverages</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="itemImage">Image URL</label>
+                    <input type="url" id="itemImage" placeholder="https://example.com/image.jpg" required>
+                </div>
+                <div class="form-group">
+                    <label for="itemAvailable">
+                        <input type="checkbox" id="itemAvailable" checked>
+                        Available
+                    </label>
+                </div>
+                <button type="submit" class="btn-primary">Save Item</button>
+            </form>
+        </div>
+    </div>
+
+    <script src="/main.js"></script>
+    <script>
+        checkAdminAuth();
+        loadAdminMenuItems();
+        document.getElementById('menuForm').addEventListener('submit', handleMenuFormSubmit);
+    </script>
+</body>
+</html>
