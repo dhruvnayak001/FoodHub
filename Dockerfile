@@ -1,11 +1,9 @@
-FROM maven:3.9.6-eclipse-temurin-21
+FROM openjdk:17-jdk-slim
 
 WORKDIR /app
 
 COPY . .
 
-RUN mvn clean package -DskipTests
+RUN ./mvnw clean package -DskipTests
 
-EXPOSE 8080
-
-CMD ["java", "-jar", "target/*.jar"]
+CMD ["java", "-jar", "target/food-ordering-system-1.0.0.jar"]
