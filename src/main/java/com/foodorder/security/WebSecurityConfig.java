@@ -84,8 +84,8 @@ public class WebSecurityConfig {
 
         // Allow both deployed frontend and local dev frontend
         configuration.setAllowedOrigins(Arrays.asList(
-                "https://foodhub-7.onrender.com", // deployed frontend
-                "http://localhost:5173"           // local frontend dev server
+                "https://quiet-belekoy-9e3dc7.netlify.app/"  // deployed frontend
+                          // local frontend dev server
         ));
 
         configuration.setAllowedMethods(Arrays.asList(
