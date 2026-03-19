@@ -91,8 +91,9 @@ public class WebSecurityConfig {
         CorsConfiguration configuration = new CorsConfiguration();
 
         configuration.setAllowedOrigins(Arrays.asList(
-                "http://localhost:5500",
-                "http://127.0.0.1:5500"
+                "http://localhost:5500",                  // local dev
+                "http://127.0.0.1:5500",                  // local dev
+                "https://foodhub-7.onrender.com"          // deployed frontend
         ));
 
         configuration.setAllowedMethods(Arrays.asList(
