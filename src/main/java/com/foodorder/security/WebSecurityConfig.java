@@ -20,6 +20,7 @@ import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
 import java.util.Arrays;
+import java.util.Collections;
 
 @Configuration
 @EnableMethodSecurity
@@ -54,10 +55,9 @@ public class WebSecurityConfig {
         http
                 .csrf(AbstractHttpConfigurer::disable)
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
-                .sessionManagement(session ->
-                        session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+                .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll() // allow preflight
+                        .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll() // preflight requests
                         .requestMatchers("/").permitAll()
                         .requestMatchers("/api/auth/**").permitAll()
                         .requestMatchers("/api/menu/**").permitAll()
@@ -76,21 +76,12 @@ public class WebSecurityConfig {
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
 
-        // Allow both deployed frontend and local dev frontend
-        configuration.setAllowedOrigins(Arrays.asList(
-                "https://regal-clafoutis-26c728.netlify.app",
-                "http://localhost:5173" // local dev frontend (Vite)
-        ));
-
+        // ALLOW ALL ORIGINS for dev and deployed frontend
+        configuration.setAllowedOriginPatterns(Collections.singletonList("*")); // <- important for allowCredentials
         configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));
-
-        // Allow all headers from frontend
         configuration.setAllowedHeaders(Arrays.asList("*"));
-
-        // Expose Authorization header to frontend
         configuration.setExposedHeaders(Arrays.asList("Authorization", "Content-Type"));
-
-        configuration.setAllowCredentials(true);
+        configuration.setAllowCredentials(true); // allow cookies / JWT headers
 
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", configuration);
