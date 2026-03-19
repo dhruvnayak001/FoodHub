@@ -84,7 +84,7 @@ public class WebSecurityConfig {
 
         // Allow both deployed frontend and local dev frontend
         configuration.setAllowedOrigins(Arrays.asList(
-                "https://spiffy-biscuit-9cf2fc.netlify.app"  // deployed frontend
+                "https://magical-monstera-cbcfa2.netlify.app"  // deployed frontend
 
         ));
 
