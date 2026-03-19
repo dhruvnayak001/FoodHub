@@ -1,5 +1,8 @@
 // API Configuration
-const API_BASE_URL = 'https://foodhub-7.onrender.com';
+// Detect if running locally or deployed
+const API_BASE_URL = window.location.hostname === 'localhost'
+    ? 'http://localhost:8080'                   // local backend
+    : 'https://foodhub-7-backend.onrender.com'; // deployed backend
 
 // Utility Functions
 function showMessage(elementId, message, isError = false) {

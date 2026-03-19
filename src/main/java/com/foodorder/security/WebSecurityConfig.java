@@ -3,6 +3,7 @@ package com.foodorder.security;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
@@ -61,20 +62,11 @@ public class WebSecurityConfig {
                 .sessionManagement(session ->
                         session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
-
-                        // allow home page
+                        .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll() // allow CORS preflight
                         .requestMatchers("/").permitAll()
-
-                        // allow authentication APIs
                         .requestMatchers("/api/auth/**").permitAll()
-
-                        // allow menu APIs
                         .requestMatchers("/api/menu/**").permitAll()
-
-                        // admin APIs
                         .requestMatchers("/api/admin/**").hasRole("ADMIN")
-
-                        // everything else needs login
                         .anyRequest().authenticated()
                 );
 
@@ -88,11 +80,12 @@ public class WebSecurityConfig {
 
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
-
         CorsConfiguration configuration = new CorsConfiguration();
 
+        // Allow both deployed frontend and local dev frontend
         configuration.setAllowedOrigins(Arrays.asList(
-                "https://foodhub-7.onrender.com"          // deployed frontend
+                "https://foodhub-7.onrender.com", // deployed frontend
+                "http://localhost:5173"           // local frontend dev server
         ));
 
         configuration.setAllowedMethods(Arrays.asList(
@@ -102,9 +95,7 @@ public class WebSecurityConfig {
         configuration.setAllowedHeaders(Arrays.asList("*"));
         configuration.setAllowCredentials(true);
 
-        UrlBasedCorsConfigurationSource source =
-                new UrlBasedCorsConfigurationSource();
-
+        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", configuration);
 
         return source;
