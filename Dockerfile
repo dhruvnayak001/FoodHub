@@ -8,4 +8,4 @@ RUN mvn clean package -DskipTests
 
 EXPOSE 8080
 
-CMD ["java", "-jar", "target/food-ordering-system-1.0.0.jar"]
+CMD ["sh", "-c", "java -jar target/*.jar"]
