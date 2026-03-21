@@ -1,0 +1,155 @@
+Index: src/main/java/com/foodorder/security/AuthTokenFilter.java
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+>package com.foodorder.security;\r\n\r\nimport jakarta.servlet.FilterChain;\r\nimport jakarta.servlet.ServletException;\r\nimport jakarta.servlet.http.HttpServletRequest;\r\nimport jakarta.servlet.http.HttpServletResponse;\r\nimport org.springframework.beans.factory.annotation.Autowired;\r\nimport org.springframework.security.authentication.UsernamePasswordAuthenticationToken;\r\nimport org.springframework.security.core.context.SecurityContextHolder;\r\nimport org.springframework.security.core.userdetails.UserDetails;\r\nimport org.springframework.security.web.authentication.WebAuthenticationDetailsSource;\r\nimport org.springframework.stereotype.Component;\r\nimport org.springframework.util.StringUtils;\r\nimport org.springframework.web.filter.OncePerRequestFilter;\r\n\r\nimport java.io.IOException;\r\n\r\n@Component\r\npublic class AuthTokenFilter extends OncePerRequestFilter {\r\n\r\n    @Autowired\r\n    private JwtUtils jwtUtils;\r\n\r\n    @Autowired\r\n    private UserDetailsServiceImpl userDetailsService;\r\n\r\n    @Override\r\n    protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response,\r\n                                    FilterChain filterChain) throws ServletException, IOException {\r\n\r\n        // ===== Skip preflight OPTIONS requests =====\r\n        if (\"OPTIONS\".equalsIgnoreCase(request.getMethod())) {\r\n            filterChain.doFilter(request, response);\r\n            return;\r\n        }\r\n\r\n        try {\r\n            String jwt = parseJwt(request);\r\n            if (jwt != null && jwtUtils.validateJwtToken(jwt)) {\r\n                String username = jwtUtils.getUserNameFromJwtToken(jwt);\r\n\r\n                UserDetails userDetails = userDetailsService.loadUserByUsername(username);\r\n                UsernamePasswordAuthenticationToken authentication =\r\n                        new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());\r\n                authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));\r\n\r\n                SecurityContextHolder.getContext().setAuthentication(authentication);\r\n            }\r\n        } catch (Exception e) {\r\n            logger.error(\"Cannot set user authentication: {}\", e);\r\n        }\r\n\r\n        filterChain.doFilter(request, response);\r\n    }\r\n\r\n    private String parseJwt(HttpServletRequest request) {\r\n        String headerAuth = request.getHeader(\"Authorization\");\r\n\r\n        if (StringUtils.hasText(headerAuth) && headerAuth.startsWith(\"Bearer \")) {\r\n            return headerAuth.substring(7);\r\n        }\r\n\r\n        return null;\r\n    }\r\n}
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/src/main/java/com/foodorder/security/AuthTokenFilter.java b/src/main/java/com/foodorder/security/AuthTokenFilter.java
+--- a/src/main/java/com/foodorder/security/AuthTokenFilter.java	(revision e5179f369369645f5a2ebb21374fc3a4c363695c)
++++ b/src/main/java/com/foodorder/security/AuthTokenFilter.java	(date 1774095514935)
+@@ -25,10 +25,12 @@
+     private UserDetailsServiceImpl userDetailsService;
+ 
+     @Override
+-    protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response,
+-                                    FilterChain filterChain) throws ServletException, IOException {
++    protected void doFilterInternal(HttpServletRequest request,
++                                    HttpServletResponse response,
++                                    FilterChain filterChain)
++            throws ServletException, IOException {
+ 
+-        // ===== Skip preflight OPTIONS requests =====
++        // ✅ IMPORTANT: Allow preflight request
+         if ("OPTIONS".equalsIgnoreCase(request.getMethod())) {
+             filterChain.doFilter(request, response);
+             return;
+@@ -36,18 +38,27 @@
+ 
+         try {
+             String jwt = parseJwt(request);
++
+             if (jwt != null && jwtUtils.validateJwtToken(jwt)) {
+                 String username = jwtUtils.getUserNameFromJwtToken(jwt);
+ 
+                 UserDetails userDetails = userDetailsService.loadUserByUsername(username);
++
+                 UsernamePasswordAuthenticationToken authentication =
+-                        new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
+-                authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
++                        new UsernamePasswordAuthenticationToken(
++                                userDetails,
++                                null,
++                                userDetails.getAuthorities()
++                        );
++
++                authentication.setDetails(
++                        new WebAuthenticationDetailsSource().buildDetails(request)
++                );
+ 
+                 SecurityContextHolder.getContext().setAuthentication(authentication);
+             }
+         } catch (Exception e) {
+-            logger.error("Cannot set user authentication: {}", e);
++            logger.error("Cannot set user authentication: {}");
+         }
+ 
+         filterChain.doFilter(request, response);
+Index: src/main/java/com/foodorder/security/WebSecurityConfig.java
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+>package com.foodorder.security;\r\n\r\nimport org.springframework.beans.factory.annotation.Autowired;\r\nimport org.springframework.context.annotation.Bean;\r\nimport org.springframework.context.annotation.Configuration;\r\nimport org.springframework.http.HttpMethod;\r\nimport org.springframework.security.authentication.AuthenticationManager;\r\nimport org.springframework.security.authentication.dao.DaoAuthenticationProvider;\r\nimport org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;\r\nimport org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;\r\nimport org.springframework.security.config.annotation.web.builders.HttpSecurity;\r\nimport org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;\r\nimport org.springframework.security.config.http.SessionCreationPolicy;\r\nimport org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;\r\nimport org.springframework.security.crypto.password.PasswordEncoder;\r\nimport org.springframework.security.web.SecurityFilterChain;\r\nimport org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;\r\nimport org.springframework.web.cors.CorsConfiguration;\r\nimport org.springframework.web.cors.UrlBasedCorsConfigurationSource;\r\nimport org.springframework.web.filter.CorsFilter;\r\n\r\n@Configuration\r\n@EnableMethodSecurity\r\npublic class WebSecurityConfig {\r\n\r\n    @Autowired\r\n    private UserDetailsServiceImpl userDetailsService;\r\n\r\n    @Autowired\r\n    private AuthTokenFilter authTokenFilter;\r\n\r\n    // ================= PASSWORD ENCODER =================\r\n    @Bean\r\n    public PasswordEncoder passwordEncoder() {\r\n        return new BCryptPasswordEncoder();\r\n    }\r\n\r\n    // ================= AUTH PROVIDER =================\r\n    @Bean\r\n    public DaoAuthenticationProvider authenticationProvider() {\r\n        DaoAuthenticationProvider authProvider = new DaoAuthenticationProvider();\r\n        authProvider.setUserDetailsService(userDetailsService);\r\n        authProvider.setPasswordEncoder(passwordEncoder());\r\n        return authProvider;\r\n    }\r\n\r\n    // ================= AUTH MANAGER =================\r\n    @Bean\r\n    public AuthenticationManager authenticationManager(AuthenticationConfiguration authConfig) throws Exception {\r\n        return authConfig.getAuthenticationManager();\r\n    }\r\n\r\n    // ================= SECURITY FILTER CHAIN =================\r\n    @Bean\r\n    public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {\r\n        http\r\n                .csrf(AbstractHttpConfigurer::disable)\r\n                .cors() // use the global CORS filter\r\n                .and()\r\n                .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))\r\n                .authorizeHttpRequests(auth -> auth\r\n                        // allow preflight requests\r\n                        .requestMatchers(HttpMethod.OPTIONS, \"/**\").permitAll()\r\n                        .requestMatchers(\"/api/auth/**\").permitAll()\r\n                        .requestMatchers(\"/api/menu/**\").permitAll()\r\n                        .requestMatchers(\"/api/admin/**\").hasRole(\"ADMIN\")\r\n                        .anyRequest().authenticated()\r\n                )\r\n                .authenticationProvider(authenticationProvider())\r\n                .addFilterBefore(authTokenFilter, UsernamePasswordAuthenticationFilter.class);\r\n\r\n        return http.build();\r\n    }\r\n\r\n    // ================= GLOBAL CORS FILTER =================\r\n    @Bean\r\n    public CorsFilter corsFilter() {\r\n        CorsConfiguration config = new CorsConfiguration();\r\n\r\n        config.setAllowCredentials(true);\r\n\r\n        // Allow all origins (for dev and deployed frontend)\r\n        config.addAllowedOriginPattern(\"*\");\r\n\r\n        // Allow all headers and methods\r\n        config.addAllowedHeader(\"*\");\r\n        config.addAllowedMethod(\"*\");\r\n\r\n        // Expose Authorization header for JWT\r\n        config.addExposedHeader(\"Authorization\");\r\n\r\n        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();\r\n        source.registerCorsConfiguration(\"/**\", config);\r\n\r\n        return new CorsFilter(source);\r\n    }\r\n}
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/src/main/java/com/foodorder/security/WebSecurityConfig.java b/src/main/java/com/foodorder/security/WebSecurityConfig.java
+--- a/src/main/java/com/foodorder/security/WebSecurityConfig.java	(revision e5179f369369645f5a2ebb21374fc3a4c363695c)
++++ b/src/main/java/com/foodorder/security/WebSecurityConfig.java	(date 1774095567423)
+@@ -16,8 +16,10 @@
+ import org.springframework.security.web.SecurityFilterChain;
+ import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+ import org.springframework.web.cors.CorsConfiguration;
++import org.springframework.web.cors.CorsConfigurationSource;
+ import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
+-import org.springframework.web.filter.CorsFilter;
++
++import java.util.List;
+ 
+ @Configuration
+ @EnableMethodSecurity
+@@ -29,13 +31,11 @@
+     @Autowired
+     private AuthTokenFilter authTokenFilter;
+ 
+-    // ================= PASSWORD ENCODER =================
+     @Bean
+     public PasswordEncoder passwordEncoder() {
+         return new BCryptPasswordEncoder();
+     }
+ 
+-    // ================= AUTH PROVIDER =================
+     @Bean
+     public DaoAuthenticationProvider authenticationProvider() {
+         DaoAuthenticationProvider authProvider = new DaoAuthenticationProvider();
+@@ -44,22 +44,19 @@
+         return authProvider;
+     }
+ 
+-    // ================= AUTH MANAGER =================
+     @Bean
+     public AuthenticationManager authenticationManager(AuthenticationConfiguration authConfig) throws Exception {
+         return authConfig.getAuthenticationManager();
+     }
+ 
+-    // ================= SECURITY FILTER CHAIN =================
++    // ✅ FIXED SECURITY CONFIG
+     @Bean
+     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
+         http
+                 .csrf(AbstractHttpConfigurer::disable)
+-                .cors() // use the global CORS filter
+-                .and()
++                .cors(cors -> cors.configurationSource(corsConfigurationSource()))
+                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+                 .authorizeHttpRequests(auth -> auth
+-                        // allow preflight requests
+                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
+                         .requestMatchers("/api/auth/**").permitAll()
+                         .requestMatchers("/api/menu/**").permitAll()
+@@ -72,26 +69,24 @@
+         return http.build();
+     }
+ 
+-    // ================= GLOBAL CORS FILTER =================
++    // ✅ PROPER CORS CONFIG (IMPORTANT)
+     @Bean
+-    public CorsFilter corsFilter() {
++    public CorsConfigurationSource corsConfigurationSource() {
+         CorsConfiguration config = new CorsConfiguration();
+ 
+         config.setAllowCredentials(true);
+ 
+-        // Allow all origins (for dev and deployed frontend)
+-        config.addAllowedOriginPattern("*");
++        config.setAllowedOrigins(List.of(
++                "https://shimmering-dusk-1655a9.netlify.app"
++        ));
+ 
+-        // Allow all headers and methods
+-        config.addAllowedHeader("*");
+-        config.addAllowedMethod("*");
+-
+-        // Expose Authorization header for JWT
+-        config.addExposedHeader("Authorization");
++        config.setAllowedHeaders(List.of("*"));
++        config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
++        config.setExposedHeaders(List.of("Authorization"));
+ 
+         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+         source.registerCorsConfiguration("/**", config);
+ 
+-        return new CorsFilter(source);
++        return source;
+     }
+ }
+\ No newline at end of file
