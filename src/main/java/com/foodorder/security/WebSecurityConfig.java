@@ -80,7 +80,7 @@ public class WebSecurityConfig {
         config.setAllowCredentials(true);
 
         // Allow all origins (for dev and deployed frontend)
-        config.addAllowedOriginPattern("*");
+        config.addAllowedOriginPattern("https://regal-clafoutis-26c728.netlify.app");
 
         // Allow all headers and methods
         config.addAllowedHeader("*");
