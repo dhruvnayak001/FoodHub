@@ -15,79 +15,71 @@ import java.util.Map;
 
 @RestController
 @RequestMapping("/api/admin")
-@CrossOrigin(origins = "*")
+// ❌ REMOVED @CrossOrigin (handled globally)
 public class AdminController {
-    
+
     @Autowired
     private MenuItemService menuItemService;
-    
+
     @Autowired
     private OrderService orderService;
-    
+
     @GetMapping("/menu")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<List<MenuItemDTO>> getAllMenuItems() {
         return ResponseEntity.ok(menuItemService.getAllItems());
     }
-    
+
     @PostMapping("/menu")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<?> createMenuItem(@RequestBody MenuItemDTO dto) {
         try {
-            MenuItemDTO created = menuItemService.createItem(dto);
-            return ResponseEntity.ok(created);
+            return ResponseEntity.ok(menuItemService.createItem(dto));
         } catch (Exception e) {
-            Map<String, String> error = new HashMap<>();
-            error.put("error", e.getMessage());
-            return ResponseEntity.badRequest().body(error);
+            return error(e.getMessage());
         }
     }
-    
+
     @PutMapping("/menu/{id}")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<?> updateMenuItem(@PathVariable Long id, @RequestBody MenuItemDTO dto) {
         try {
-            MenuItemDTO updated = menuItemService.updateItem(id, dto);
-            return ResponseEntity.ok(updated);
+            return ResponseEntity.ok(menuItemService.updateItem(id, dto));
         } catch (Exception e) {
-            Map<String, String> error = new HashMap<>();
-            error.put("error", e.getMessage());
-            return ResponseEntity.badRequest().body(error);
+            return error(e.getMessage());
         }
     }
-    
+
     @DeleteMapping("/menu/{id}")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<?> deleteMenuItem(@PathVariable Long id) {
         try {
             menuItemService.deleteItem(id);
-            Map<String, String> success = new HashMap<>();
-            success.put("message", "Menu item deleted successfully");
-            return ResponseEntity.ok(success);
+            return ResponseEntity.ok(Map.of("message", "Menu item deleted successfully"));
         } catch (Exception e) {
-            Map<String, String> error = new HashMap<>();
-            error.put("error", e.getMessage());
-            return ResponseEntity.badRequest().body(error);
+            return error(e.getMessage());
         }
     }
-    
+
     @GetMapping("/orders")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<List<OrderDTO>> getAllOrders() {
         return ResponseEntity.ok(orderService.getAllOrders());
     }
-    
+
     @PutMapping("/orders/{id}/status")
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<?> updateOrderStatus(@PathVariable Long id, @RequestBody Map<String, String> request) {
+    public ResponseEntity<?> updateOrderStatus(@PathVariable Long id,
+                                               @RequestBody Map<String, String> request) {
         try {
             String status = request.get("status");
-            OrderDTO updated = orderService.updateOrderStatus(id, status);
-            return ResponseEntity.ok(updated);
+            return ResponseEntity.ok(orderService.updateOrderStatus(id, status));
         } catch (Exception e) {
-            Map<String, String> error = new HashMap<>();
-            error.put("error", e.getMessage());
-            return ResponseEntity.badRequest().body(error);
+            return error(e.getMessage());
         }
+    }
+
+    private ResponseEntity<Map<String, String>> error(String msg) {
+        return ResponseEntity.badRequest().body(Map.of("error", msg));
     }
 }
