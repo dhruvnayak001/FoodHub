@@ -77,7 +77,7 @@ public class WebSecurityConfig {
         config.setAllowCredentials(true);
 
         config.setAllowedOrigins(List.of(
-                "https://regal-clafoutis-26c728.netlify.app"
+                "https://shimmering-dusk-1655a9.netlify.app"
         ));
 
         config.setAllowedHeaders(List.of("*"));
