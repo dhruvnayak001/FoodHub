@@ -16,10 +16,8 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.web.cors.CorsConfiguration;
-import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
-
-import java.util.List;
+import org.springframework.web.filter.CorsFilter;
 
 @Configuration
 @EnableMethodSecurity
@@ -31,11 +29,13 @@ public class WebSecurityConfig {
     @Autowired
     private AuthTokenFilter authTokenFilter;
 
+    // ================= PASSWORD ENCODER =================
     @Bean
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
     }
 
+    // ================= AUTH PROVIDER =================
     @Bean
     public DaoAuthenticationProvider authenticationProvider() {
         DaoAuthenticationProvider authProvider = new DaoAuthenticationProvider();
@@ -44,19 +44,22 @@ public class WebSecurityConfig {
         return authProvider;
     }
 
+    // ================= AUTH MANAGER =================
     @Bean
     public AuthenticationManager authenticationManager(AuthenticationConfiguration authConfig) throws Exception {
         return authConfig.getAuthenticationManager();
     }
 
-    // ✅ FIXED SECURITY CONFIG
+    // ================= SECURITY FILTER CHAIN =================
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http
                 .csrf(AbstractHttpConfigurer::disable)
-                .cors(cors -> cors.configurationSource(corsConfigurationSource()))
+                .cors() // use the global CORS filter
+                .and()
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
+                        // allow preflight requests
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
                         .requestMatchers("/api/auth/**").permitAll()
                         .requestMatchers("/api/menu/**").permitAll()
@@ -69,24 +72,26 @@ public class WebSecurityConfig {
         return http.build();
     }
 
-    // ✅ PROPER CORS CONFIG (IMPORTANT)
+    // ================= GLOBAL CORS FILTER =================
     @Bean
-    public CorsConfigurationSource corsConfigurationSource() {
+    public CorsFilter corsFilter() {
         CorsConfiguration config = new CorsConfiguration();
 
         config.setAllowCredentials(true);
 
-        config.setAllowedOrigins(List.of(
-                "https://shimmering-dusk-1655a9.netlify.app"
-        ));
+        // Allow all origins (for dev and deployed frontend)
+        config.addAllowedOriginPattern("*");
 
-        config.setAllowedHeaders(List.of("*"));
-        config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
-        config.setExposedHeaders(List.of("Authorization"));
+        // Allow all headers and methods
+        config.addAllowedHeader("*");
+        config.addAllowedMethod("*");
+
+        // Expose Authorization header for JWT
+        config.addExposedHeader("Authorization");
 
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", config);
 
-        return source;
+        return new CorsFilter(source);
     }
 }

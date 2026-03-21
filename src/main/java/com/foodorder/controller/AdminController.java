@@ -15,7 +15,7 @@ import java.util.Map;
 
 @RestController
 @RequestMapping("/api/admin")
-// ❌ REMOVED @CrossOrigin (handled globally)
+@CrossOrigin(origins = "*")
 public class AdminController {
 
     @Autowired
@@ -34,9 +34,12 @@ public class AdminController {
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<?> createMenuItem(@RequestBody MenuItemDTO dto) {
         try {
-            return ResponseEntity.ok(menuItemService.createItem(dto));
+            MenuItemDTO created = menuItemService.createItem(dto);
+            return ResponseEntity.ok(created);
         } catch (Exception e) {
-            return error(e.getMessage());
+            Map<String, String> error = new HashMap<>();
+            error.put("error", e.getMessage());
+            return ResponseEntity.badRequest().body(error);
         }
     }
 
@@ -44,9 +47,12 @@ public class AdminController {
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<?> updateMenuItem(@PathVariable Long id, @RequestBody MenuItemDTO dto) {
         try {
-            return ResponseEntity.ok(menuItemService.updateItem(id, dto));
+            MenuItemDTO updated = menuItemService.updateItem(id, dto);
+            return ResponseEntity.ok(updated);
         } catch (Exception e) {
-            return error(e.getMessage());
+            Map<String, String> error = new HashMap<>();
+            error.put("error", e.getMessage());
+            return ResponseEntity.badRequest().body(error);
         }
     }
 
@@ -55,9 +61,13 @@ public class AdminController {
     public ResponseEntity<?> deleteMenuItem(@PathVariable Long id) {
         try {
             menuItemService.deleteItem(id);
-            return ResponseEntity.ok(Map.of("message", "Menu item deleted successfully"));
+            Map<String, String> success = new HashMap<>();
+            success.put("message", "Menu item deleted successfully");
+            return ResponseEntity.ok(success);
         } catch (Exception e) {
-            return error(e.getMessage());
+            Map<String, String> error = new HashMap<>();
+            error.put("error", e.getMessage());
+            return ResponseEntity.badRequest().body(error);
         }
     }
 
@@ -69,17 +79,15 @@ public class AdminController {
 
     @PutMapping("/orders/{id}/status")
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<?> updateOrderStatus(@PathVariable Long id,
-                                               @RequestBody Map<String, String> request) {
+    public ResponseEntity<?> updateOrderStatus(@PathVariable Long id, @RequestBody Map<String, String> request) {
         try {
             String status = request.get("status");
-            return ResponseEntity.ok(orderService.updateOrderStatus(id, status));
+            OrderDTO updated = orderService.updateOrderStatus(id, status);
+            return ResponseEntity.ok(updated);
         } catch (Exception e) {
-            return error(e.getMessage());
+            Map<String, String> error = new HashMap<>();
+            error.put("error", e.getMessage());
+            return ResponseEntity.badRequest().body(error);
         }
-    }
-
-    private ResponseEntity<Map<String, String>> error(String msg) {
-        return ResponseEntity.badRequest().body(Map.of("error", msg));
     }
 }
