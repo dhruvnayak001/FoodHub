@@ -144,15 +144,15 @@ public class OrderService {
             for (OrderItem item : items) {
                 table.addCell(new PdfPCell(new Phrase(item.getMenuItem().getName(), normalFont)));
                 table.addCell(new PdfPCell(new Phrase(String.valueOf(item.getQuantity()), normalFont)));
-                table.addCell(new PdfPCell(new Phrase("$" + item.getPrice(), normalFont)));
-                table.addCell(new PdfPCell(new Phrase("$" + item.getPrice().multiply(BigDecimal.valueOf(item.getQuantity())), normalFont)));
+                table.addCell(new PdfPCell(new Phrase("₹" + item.getPrice(), normalFont)));
+                table.addCell(new PdfPCell(new Phrase("₹" + item.getPrice().multiply(BigDecimal.valueOf(item.getQuantity())), normalFont)));
             }
 
             PdfPCell totalCell = new PdfPCell(new Phrase("Total", headFont));
             totalCell.setColspan(3);
             totalCell.setHorizontalAlignment(Element.ALIGN_RIGHT);
             table.addCell(totalCell);
-            table.addCell(new PdfPCell(new Phrase("$" + order.getTotalAmount(), headFont)));
+            table.addCell(new PdfPCell(new Phrase("₹" + order.getTotalAmount(), headFont)));
 
             document.add(table);
             document.close();
