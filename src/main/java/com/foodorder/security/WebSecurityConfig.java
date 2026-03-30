@@ -77,7 +77,7 @@ public class WebSecurityConfig {
         config.setAllowCredentials(true);
 
         config.setAllowedOrigins(List.of(
-                "https://cheerful-concha-54636f.netlify.ap"
+                "https://cheerful-concha-54636f.netlify.app"
         ));
 
         config.setAllowedHeaders(List.of("*"));
