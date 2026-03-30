@@ -60,6 +60,7 @@ public class WebSecurityConfig {
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
                         .requestMatchers("/api/auth/**").permitAll()
                         .requestMatchers("/api/menu/**").permitAll()
+                        .requestMatchers("/").permitAll()
                         .requestMatchers("/api/ping").permitAll()   // ✅ ADD THIS
                         .requestMatchers("/api/admin/**").hasRole("ADMIN")
                         .anyRequest().authenticated()
